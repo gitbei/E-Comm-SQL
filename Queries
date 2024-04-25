@@ -1,0 +1,118 @@
+
+select * from `E_Commerce.sales` limit 100
+
+
+#1. How do customers rate the products on average?
+select round(avg(Customer_rating),2) as Avg_Ratings from `E_Commerce.sales`
+
+--On an average customer rates the products as 2.99 out of 5 whcih is satisfactory level
+
+#2. Does the mode of shipment impact customer satisfaction?
+select Mode_of_Shipment, round(avg(Customer_rating),2) as Avg_Rating from `E_Commerce.sales` group by Mode_of_Shipment order by 1
+
+-- Not Really, By mode customer satisfaction stands on average to 3 for all mode of shipment.
+
+
+#3. Total no of orders by mode of shipment
+select Mode_of_Shipment, count(distinct ID) as No_of_Orders from `E_Commerce.sales` group by Mode_of_Shipment order by 1
+
+--Its evident that more orders are shipped by "Ship" mode may be considering the cost and volume. Others mode are equally distributed
+
+
+#4.	What is the typical cost range of the products?
+select round(avg(Cost_of_the_Product),2) as Avg_Product_Cost from `E_Commerce.sales`
+
+-- Average product cost stands at 210 per order. 
+
+#5.	Do certain warehouse blocks tend to have higher or lower product costs?
+select Warehouse_block, round(avg(Cost_of_the_Product),2) as Avg_Cost_Per_WHBlock from `E_Commerce.sales` group by 1 order by 1
+
+--No. Almost all blocks are orders of nearly same average cost per order.
+
+#6.	Viewing number of purchases, average rating, and average number of purchases and cost by gender?
+
+select Gender, count(Gender) as Purchases, round(avg(Customer_rating),2) as Avg_Rating, round(avg(Prior_purchases),2) as Avg_Past_Purchases, round(avg(Cost_of_the_Product),2) as Avg_Cost 
+from `E_Commerce.sales` group by Gender 
+
+-- No much difference, slightly female gender are placed with more order than male. But by very small margin.
+
+#7.	How does the importance of products affect customer satisfaction?
+
+select Product_importance, round(avg(Customer_rating),2) Avg_Rating from `E_Commerce.sales` group by 1
+
+--Not much, customer satisfaction remains steady for all product importance.
+
+#8. How the delivery time impacted based on the product importance? 0 Delivered on time and 1 Delivered Late
+
+select Product_importance,Reached_on_Time_Y_N,Purchases, round((Purchases/T*100),2) as Percentage from (
+
+select *, sum(Purchases) over(partition by Product_importance) as T from(
+
+select Product_importance, Reached_on_Time_Y_N, count(Product_importance) as Purchases from `E_Commerce.sales` group by 1,2 order by Product_importance))
+order by 2
+
+-- All 3 orders under product importance are being delivered late from total, surprisingly for the high importance orders almost 65% of orders are deliverd late.
+
+#9. Percentage of on time  and late deliveries by mode of shipment: 0 Delivered on time and 1 Delivered Late
+
+select Mode_of_Shipment, Reached_on_Time_Y_N, Orders, round((Orders/T*100),2) as Percentage from (
+  
+select *, sum(Orders) over(partition by Mode_of_Shipment) as T from (
+
+select Mode_of_Shipment, Reached_on_Time_Y_N, count(*) as Orders
+from `E_Commerce.sales`  group by 1,2 order by 1))
+order by 2
+
+-- To a slight margin flight mode orders are being delivered late followed by ship and road.
+
+#10. No of Orders Processed by Warehouse Block
+
+select Warehouse_block, count(*) as Orders from `E_Commerce.sales` group by 1
+
+-- More orders are picked and processed from warehouse block F followed by others equally.
+
+#11. Let's look at if there are different ratings based off of the source warehouse block.
+
+select Warehouse_block, round(avg(Customer_rating),2) as Avg_Rating from `E_Commerce.sales` group by 1 order by 2 desc
+
+-- Block D & F are rated better compared to other blocks but very small margin only. Nothing major
+
+#12. Percentage of orders delivered on time and late.
+
+select Reached_on_Time_Y_N,Orders, total_orders, round(Orders/total_Orders*100,2) as Percentage from (
+select Reached_on_Time_Y_N, count(*) as Orders,
+sum(count(*)) over() as total_orders,
+from `E_Commerce.sales`
+group by 1)
+
+-- 59.67% of orders are being delivere late from total orders.
+
+#13. Trying to find any corelation between the delivery time and weight of products.
+
+select max(Weight_in_gms) as Max_Weight, min(Weight_in_gms) as Min_Weight from `E_Commerce.sales`
+
+--Min turned out be 1001gms and Max 7846gms
+
+#lets bin the weights 
+
+SELECT Reached_on_Time_Y_N,
+COUNT (CASE WHEN Weight_in_gms >= 1000 AND Weight_in_gms <3282 THEN 1 END) AS Weight_1000_3282,
+COUNT (CASE WHEN Weight_in_gms>= 3283 AND Weight_in_gms <5564 THEN 1 END ) AS Weight_3283_5564,
+COUNT (CASE WHEN Weight_in_gms>= 5565 AND Weight_in_gms <7846 THEN 1  END)  AS Weight_5565_7846
+FROM `E_Commerce.sales`
+GROUP BY 1
+
+--Items that weight 1000-3282 grams are arriving late at a higher rate than heavier items. 76% of lighter items are arriving late.
+-- Is there an internal processing issue with smaller items causing delays. smaller items falling off conveyer belt? Requiring frequent human intervention?
+
+
+
+
+
+
+
+
+
+
+
+
