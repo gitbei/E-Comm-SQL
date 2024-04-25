@@ -3,7 +3,9 @@
 # Description:
 Data collected on warehouse operations, product delivery, and customer ratings are investigated here. Approximately 60% of all deliveries made from this warehouse are late. To find out the cause of this issue, I perform EDA using SQL.
 
-For this project, I pull a dataset from Kaggle, host it on pgAdmin and Postgres Docker containers, and query using Psycopg2 in Python on VSCode.
+For this project, I pull a dataset from Kaggle, link below. Queried in Big Query. 
+
+https://www.kaggle.com/datasets/prachi13/customer-analytics/data
 
 # Dataset
 The dataset used here is the E-Commerce Shipping Data from Kaggle posted by Prachi Gopalani.
